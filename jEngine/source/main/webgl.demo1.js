@@ -14,6 +14,15 @@
         cubeVerticesColorBuffer: null,
         perspectiveMatrix: null,
         mvMatrix: null,
+        mvMatrixStack: [],
+        squareRotation: 0.0,
+        lastSquareUpdateTime: 0,
+        squareXOffset: 0.0,
+        squareYOffset: 0.0,
+        squareZOffset: 0.0,
+        xIncValue: 0.2,
+        yIncValue: -0.4,
+        zIncValue: 0.4,
 
         initialize: function(runner, config) {
             this.runner = runner;
@@ -24,8 +33,20 @@
             runner.start();
         },
         update: function(dt) {
+
+            this.squareRotation += (30 * dt);
+
+            this.squareXOffset += this.xIncValue * 3 * dt;
+            this.squareYOffset += this.yIncValue * 3 * dt;
+            this.squareZOffset += this.zIncValue * 3 * dt;
+
+            if (Math.abs(this.squareYOffset) > 2.5) {
+                this.xIncValue = -this.xIncValue;
+                this.yIncValue = -this.yIncValue;
+                this.zIncValue = -this.zIncValue;
+            }
         },
-        draw: function (gl) {
+        draw: function(gl) {
             // Establish the perspective with which we want to view the
             // scene. Our field of view is 45 degrees, with a width/height
             // ratio of this.runner.width:this.runner.height, and we only want to see objects between 0.1 units
@@ -38,13 +59,18 @@
 
             // Now move the drawing position a bit to where we want to start
             // drawing the cube.
-            this.mvTranslate([-0.0, 0.0, -6.0]);
+            this.mvTranslate([-0.0, 0.0, -12.0]);
+            
+            // Save the current matrix, then rotate before we draw.
+            this.mvPushMatrix();
+            this.mvRotate(this.squareRotation, [1, 0, 1]);
+            this.mvTranslate([this.squareXOffset, this.squareYOffset, this.squareZOffset]);
 
             // Draw the cube by binding the array buffer to the cube's vertices
             // array, setting attributes, and pushing it to GL.
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesBuffer);
             gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-            
+
             // Set the colors attribute for the vertices.
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
             gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
@@ -53,9 +79,11 @@
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
             this.setMatrixUniforms(gl);
             gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+
+            this.mvPopMatrix();
         },
 
-        initializeBuffers: function (gl) {
+        initializeBuffers: function(gl) {
             // Create a buffer for the cube's vertices.
             this.cubeVerticesBuffer = gl.createBuffer();
 
@@ -82,33 +110,33 @@
             var vertices = [
                 // Front face
                 -1.0, -1.0, 1.0,
-                 1.0, -1.0, 1.0,
-                 1.0, 1.0, 1.0,
+                1.0, -1.0, 1.0,
+                1.0, 1.0, 1.0,
                 -1.0, 1.0, 1.0,
 
                 // Back face
                 -1.0, -1.0, -1.0,
                 -1.0, 1.0, -1.0,
-                 1.0, 1.0, -1.0,
-                 1.0, -1.0, -1.0,
+                1.0, 1.0, -1.0,
+                1.0, -1.0, -1.0,
 
                 // Top face
                 -1.0, 1.0, -1.0,
                 -1.0, 1.0, 1.0,
-                 1.0, 1.0, 1.0,
-                 1.0, 1.0, -1.0,
+                1.0, 1.0, 1.0,
+                1.0, 1.0, -1.0,
 
                 // Bottom face
                 -1.0, -1.0, -1.0,
-                 1.0, -1.0, -1.0,
-                 1.0, -1.0, 1.0,
+                1.0, -1.0, -1.0,
+                1.0, -1.0, 1.0,
                 -1.0, -1.0, 1.0,
 
                 // Right face
-                 1.0, -1.0, -1.0,
-                 1.0, 1.0, -1.0,
-                 1.0, 1.0, 1.0,
-                 1.0, -1.0, 1.0,
+                1.0, -1.0, -1.0,
+                1.0, 1.0, -1.0,
+                1.0, 1.0, 1.0,
+                1.0, -1.0, 1.0,
 
                 // Left face
                 -1.0, -1.0, -1.0,
@@ -249,6 +277,31 @@
 
             var mvUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
             gl.uniformMatrix4fv(mvUniform, false, new Float32Array(this.mvMatrix.flatten()));
+        },
+
+        mvPushMatrix: function(m) {
+            if (m) {
+                this.mvMatrixStack.push(m.dup());
+                this.mvMatrix = m.dup();
+            } else {
+                this.mvMatrixStack.push(this.mvMatrix.dup());
+            }
+        },
+
+        mvPopMatrix: function() {
+            if (!this.mvMatrixStack.length) {
+                throw("Can't pop from an empty matrix stack.");
+            }
+
+            this.mvMatrix = this.mvMatrixStack.pop();
+            return this.mvMatrix;
+        },
+
+        mvRotate: function(angle, v) {
+            var inRadians = angle * Math.PI / 180.0;
+
+            var m = Matrix.Rotation(inRadians, $V([v[0], v[1], v[2]])).ensure4x4();
+            this.multMatrix(m);
         }
     }
 
