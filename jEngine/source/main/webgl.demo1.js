@@ -37,7 +37,7 @@
             gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
 
             this.setMatrixUniforms(gl);
-            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 3);
         },
 
         initializeBuffers: function(gl) {
@@ -45,10 +45,9 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesBuffer);
 
             var vertices = [
-                1.0, 1.0, 0.0,
-                -1.0, 1.0, 0.0,
-                1.0, -1.0, 0.0,
-                -1.0, -1.0, 0.0
+                0.0, 1.0, 0.0,
+                -1.0, 0.0, 0.0,
+                1.0, 0.0, 0.0
             ];
 
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
