@@ -8,7 +8,9 @@
 
         shaderProgram: null,
         vertexPositionAttribute: null,
+        vertexColorAttribute: null,
         squareVerticesBuffer: null,
+        squareVerticesColorBuffer: null,
         perspectiveMatrix: null,
         mvMatrix: null,
 
@@ -30,6 +32,10 @@
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesBuffer);
             gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesColorBuffer);
+            gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
+
             this.setMatrixUniforms(gl);
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
         },
@@ -46,6 +52,17 @@
             ];
 
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+            var colors = [
+                1.0, 1.0, 1.0, 1.0,
+                1.0, 0.0, 0.0, 1.0,
+                0.0, 1.0, 0.0, 1.0,
+                0.0, 0.0, 1.0, 1.0
+            ];
+
+            this.squareVerticesColorBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesColorBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
         },
 
         initializeShaders: function(gl) {
@@ -65,6 +82,9 @@
 
             this.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
             gl.enableVertexAttribArray(this.vertexPositionAttribute);
+
+            this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
+            gl.enableVertexAttribArray(this.vertexColorAttribute);
         },
 
         getShader: function(gl, id) {
