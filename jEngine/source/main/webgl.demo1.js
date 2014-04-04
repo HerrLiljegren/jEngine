@@ -28,7 +28,7 @@
             this.perspectiveMatrix = makePerspective(45, this.runner.width / this.runner.height, 0.1, 100.0);
 
             this.loadIdentity();
-            this.mvTranslate([-0.0, 0.0, -3.0]);
+            this.mvTranslate([-0.0, 0.0, -6.0]);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesBuffer);
             gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
