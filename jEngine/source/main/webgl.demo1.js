@@ -260,7 +260,8 @@
             this.cubeTexture = gl.createTexture();
             this.cubeImage = new Image();
             this.cubeImage.onload = function () { me.onTextureLoaded(gl, me.cubeImage, me.cubeTexture); }
-            this.cubeImage.src = "assets/textures/Grass_1.png";
+            //this.cubeImage.src = "assets/textures/Grass_1.png";
+            this.cubeImage.src = "assets/textures/stone_wall_sandstone_4096.jpg";
         },
 
         onTextureLoaded: function(gl, image, texture) {
