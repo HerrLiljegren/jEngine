@@ -7,23 +7,32 @@
         runner: null,
 
         shaderProgram: null,
+
         vertexPositionAttribute: null,
         vertexColorAttribute: null,
+        vertexNormalAttribute: null,
+
         cubeVerticesBuffer: null,
         cubeVerticesIndexBuffer: null,
         cubeVerticesColorBuffer: null,
-        textureCoordAttribute: null,
+        cubeVerticesNormalBuffer: null,
+        
         cubeVerticesTextureCoordBuffer: null,
+        textureCoordAttribute: null,
         cubeTexture: null,
         cubeImage: null,
+
         perspectiveMatrix: null,
         mvMatrix: null,
         mvMatrixStack: [],
+
         cubeRotation: 0.0,
         lastCubeUpdateTime: 0,
+
         cubeXOffset: 0.0,
         cubeYOffset: 0.0,
         cubeZOffset: 0.0,
+
         xIncValue: 0.2,
         yIncValue: -0.4,
         zIncValue: 0.4,
@@ -75,6 +84,14 @@
             // array, setting attributes, and pushing it to GL.
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesBuffer);
             gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesNormalBuffer);
+            gl.vertexAttribPointer(this.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+
+            var normalMatrix = this.mvMatrix.inverse();
+            normalMatrix = normalMatrix.transpose();
+            var nUniform = gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
+            gl.uniformMatrix4fv(nUniform, false, new Float32Array(normalMatrix.flatten()));
 
             // Set the colors attribute for the vertices.
             //gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
@@ -162,6 +179,49 @@
             // do this by creating a Float32Array from the JavaScript array,
             // then use it to fill the current vertex buffer.
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+            this.cubeVerticesNormalBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesNormalBuffer);
+
+            var vertexNormals = [
+                // Front
+                0.0, 0.0, 1.0,
+                0.0, 0.0, 1.0,
+                0.0, 0.0, 1.0,
+                0.0, 0.0, 1.0,
+
+                // Back
+                0.0, 0.0, -1.0,
+                0.0, 0.0, -1.0,
+                0.0, 0.0, -1.0,
+                0.0, 0.0, -1.0,
+
+                // Top
+                0.0, 1.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 1.0, 0.0,
+
+                // Bottom
+                0.0, -1.0, 0.0,
+                0.0, -1.0, 0.0,
+                0.0, -1.0, 0.0,
+                0.0, -1.0, 0.0,
+
+                // Right
+                1.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+                1.0, 0.0, 0.0,
+
+                // Left
+                -1.0, 0.0, 0.0,
+                -1.0, 0.0, 0.0,
+                -1.0, 0.0, 0.0,
+                -1.0, 0.0, 0.0
+            ];
+
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 
             // this.useColors(gl);
 
