@@ -64,7 +64,7 @@
 
             // Now move the drawing position a bit to where we want to start
             // drawing the cube.
-            this.mvTranslate([-0.0, 0.0, -12.0]);
+            this.mvTranslate([-0.0, 0.0, -6.0]);
             
             // Save the current matrix, then rotate before we draw.
             this.mvPushMatrix();
