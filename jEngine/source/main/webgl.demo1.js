@@ -12,14 +12,18 @@
         cubeVerticesBuffer: null,
         cubeVerticesIndexBuffer: null,
         cubeVerticesColorBuffer: null,
+        textureCoordAttribute: null,
+        cubeVerticesTextureCoordBuffer: null,
+        cubeTexture: null,
+        cubeImage: null,
         perspectiveMatrix: null,
         mvMatrix: null,
         mvMatrixStack: [],
-        squareRotation: 0.0,
-        lastSquareUpdateTime: 0,
-        squareXOffset: 0.0,
-        squareYOffset: 0.0,
-        squareZOffset: 0.0,
+        cubeRotation: 0.0,
+        lastCubeUpdateTime: 0,
+        cubeXOffset: 0.0,
+        cubeYOffset: 0.0,
+        cubeZOffset: 0.0,
         xIncValue: 0.2,
         yIncValue: -0.4,
         zIncValue: 0.4,
@@ -27,6 +31,7 @@
         initialize: function(runner, config) {
             this.runner = runner;
 
+            this.initializeTextures(runner.front);
             this.initializeShaders(runner.front);
             this.initializeBuffers(runner.front);
 
@@ -34,13 +39,13 @@
         },
         update: function(dt) {
 
-            this.squareRotation += (30 * dt);
+            this.cubeRotation += (30 * dt);
 
-            this.squareXOffset += this.xIncValue * 3 * dt;
-            this.squareYOffset += this.yIncValue * 3 * dt;
-            this.squareZOffset += this.zIncValue * 3 * dt;
+            this.cubeXOffset += this.xIncValue * 3 * dt;
+            this.cubeYOffset += this.yIncValue * 3 * dt;
+            this.cubeZOffset += this.zIncValue * 3 * dt;
 
-            if (Math.abs(this.squareYOffset) > 2.5) {
+            if (Math.abs(this.cubeYOffset) > 2.5) {
                 this.xIncValue = -this.xIncValue;
                 this.yIncValue = -this.yIncValue;
                 this.zIncValue = -this.zIncValue;
@@ -63,8 +68,8 @@
             
             // Save the current matrix, then rotate before we draw.
             this.mvPushMatrix();
-            this.mvRotate(this.squareRotation, [1, 0, 1]);
-            this.mvTranslate([this.squareXOffset, this.squareYOffset, this.squareZOffset]);
+            this.mvRotate(this.cubeRotation, [1, 0, 1]);
+            //this.mvTranslate([this.cubeXOffset, this.cubeYOffset, this.cubeZOffset]);
 
             // Draw the cube by binding the array buffer to the cube's vertices
             // array, setting attributes, and pushing it to GL.
@@ -72,8 +77,16 @@
             gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
             // Set the colors attribute for the vertices.
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
-            gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
+            //gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
+            //gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
+
+            // Set the texture coordinates attribute for the vertices.
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
+            gl.vertexAttribPointer(this.textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
+
+            gl.activeTexture(gl.TEXTURE0);
+            gl.bindTexture(gl.TEXTURE_2D, this.cubeTexture);
+            gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler"), 0);
 
             // Draw the cube.
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
@@ -150,6 +163,70 @@
             // then use it to fill the current vertex buffer.
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
+            // this.useColors(gl);
+
+            this.cubeVerticesTextureCoordBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
+
+            var textureCoordinates = [
+                // Front
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+                // Back
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+                // Top
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+                // Bottom
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+                // Right
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0,
+                // Left
+                0.0, 0.0,
+                1.0, 0.0,
+                1.0, 1.0,
+                0.0, 1.0
+            ];
+
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
+
+            // Build the element array buffer; this specifies the indices
+            // into the vertex array for each face's vertices.
+
+            this.cubeVerticesIndexBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
+
+            // This array defines each face as two triangles, using the
+            // indices into the vertex array to specify each triangle's
+            // position.
+            var cubeVertexIndices = [
+                0, 1, 2, 0, 2, 3, // front
+                4, 5, 6, 4, 6, 7, // back
+                8, 9, 10, 8, 10, 11, // top
+                12, 13, 14, 12, 14, 15, // bottom
+                16, 17, 18, 16, 18, 19, // right
+                20, 21, 22, 20, 22, 23 // left
+            ];
+
+            // Now send the element array to GL
+
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+        },
+
+        useColors: function(gl) {
             // Now set up the colors for the faces. We'll use solid colors
             // for each face.
             var colors = [
@@ -176,28 +253,23 @@
             this.cubeVerticesColorBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(generatedColors), gl.STATIC_DRAW);
+        },
 
-            // Build the element array buffer; this specifies the indices
-            // into the vertex array for each face's vertices.
+        initializeTextures: function (gl) {
+            var me = this;
+            this.cubeTexture = gl.createTexture();
+            this.cubeImage = new Image();
+            this.cubeImage.onload = function () { me.onTextureLoaded(gl, me.cubeImage, me.cubeTexture); }
+            this.cubeImage.src = "assets/textures/Grass_1.png";
+        },
 
-            this.cubeVerticesIndexBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
-
-            // This array defines each face as two triangles, using the
-            // indices into the vertex array to specify each triangle's
-            // position.
-            var cubeVertexIndices = [
-                0, 1, 2, 0, 2, 3, // front
-                4, 5, 6, 4, 6, 7, // back
-                8, 9, 10, 8, 10, 11, // top
-                12, 13, 14, 12, 14, 15, // bottom
-                16, 17, 18, 16, 18, 19, // right
-                20, 21, 22, 20, 22, 23 // left
-            ];
-
-            // Now send the element array to GL
-
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+        onTextureLoaded: function(gl, image, texture) {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            gl.bindTexture(gl.TEXTURE_2D, null);
         },
 
         initializeShaders: function(gl) {
@@ -218,8 +290,11 @@
             this.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
             gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
-            this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
-            gl.enableVertexAttribArray(this.vertexColorAttribute);
+            //this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
+            //gl.enableVertexAttribArray(this.vertexColorAttribute);
+
+            this.textureCoordAttribute = gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(this.textureCoordAttribute);
         },
 
         getShader: function(gl, id) {

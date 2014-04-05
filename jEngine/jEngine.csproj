@@ -57,6 +57,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="assets\textures\Grass_1.png" />
     <Content Include="packages.config" />
     <Content Include="source\main\module.utilities.js" />
     <Content Include="source\build\build.bat" />

@@ -7,33 +7,58 @@
         <script data-main="source/main" src="source/vendor/require.js"></script>
         <!--<script src="source/build/main-built.js"></script>-->
     </head>
-    <body>
-        <h1>My Sample Project</h1>
+<body>
+    <h1>My Sample Project</h1>
 
-        <canvas id="canvas" width="672" height="744"></canvas>
+    <canvas id="canvas" width="672" height="744"></canvas>
 
-        <script id="shader-fs" type="x-shader/x-fragment">
-            varying lowp vec4 vColor;
+    <!--<script id="shader-fs" type="x-shader/x-fragment">
+        varying lowp vec4 vColor;
 
-            void main(void) {
-                gl_FragColor = vColor;
-            }
+        void main(void) {
+        gl_FragColor = vColor;
+        }
+
+    </script>-->
+
+    <!--<script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec4 aVertexColor;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        varying lowp vec4 vColor;
+
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vColor = aVertexColor;
+        }
+    </script>-->
     
-        </script>
+    <script id="shader-fs" type="x-shader/x-fragment">
+        varying highp vec2 vTextureCoord;
 
-        <script id="shader-vs" type="x-shader/x-vertex">
-            attribute vec3 aVertexPosition;
-            attribute vec4 aVertexColor;
+        uniform sampler2D uSampler;
 
-            uniform mat4 uMVMatrix;
-            uniform mat4 uPMatrix;
-            
-            varying lowp vec4 vColor;
+        void main(void) {
+            gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        }
+    </script>
 
-            void main(void) {
-                gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-                vColor = aVertexColor;
-            }
-        </script>
-    </body>
+    <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        attribute vec2 aTextureCoord;
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+
+        varying highp vec2 vTextureCoord;
+
+        void main(void) {
+            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            vTextureCoord = aTextureCoord;
+        }
+    </script>
+</body>
 </html>
