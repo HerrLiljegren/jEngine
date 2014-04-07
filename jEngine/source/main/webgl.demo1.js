@@ -119,8 +119,8 @@
             gl.uniformMatrix4fv(nUniform, false, new Float32Array(Matrix.I(4).flatten()));
 
             // Set the colors attribute for the vertices.
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
-            gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
+            //gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
+            //gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
 
             // Set the texture coordinates attribute for the vertices.
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
@@ -252,7 +252,7 @@
 
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 
-            this.useColors(gl);
+            //this.useColors(gl);
 
             this.cubeVerticesTextureCoordBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
@@ -339,15 +339,7 @@
                 }
             }
 
-            generatedColors[0] = 1.0;
-            generatedColors[1] = 0.0;
-            generatedColors[2] = 0.0;
-            generatedColors[3] = 1.0;
-
-            generatedColors[4] = 0.0;
-            generatedColors[5] = 1.0;
-            generatedColors[6] = 0.0;
-            generatedColors[7] = 1.0;
+           
 
             this.cubeVerticesColorBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
@@ -390,8 +382,8 @@
             this.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
             gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
-            this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
-            gl.enableVertexAttribArray(this.vertexColorAttribute);
+            //this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
+            //gl.enableVertexAttribArray(this.vertexColorAttribute);
 
             this.textureCoordAttribute = gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
             gl.enableVertexAttribArray(this.textureCoordAttribute);
