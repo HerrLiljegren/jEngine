@@ -20,7 +20,6 @@
         }
 
     </script>-->
-
     <!--<script id="shader-vs" type="x-shader/x-vertex">
         attribute vec3 aVertexPosition;
         attribute vec4 aVertexColor;
@@ -35,33 +34,29 @@
             vColor = aVertexColor;
         }
     </script>-->
-    
-    <script id="shader-fs" type="x-shader/x-fragment">
-        varying highp vec2 vTextureCoord;
-        varying highp vec3 vLighting;
-
-        uniform sampler2D uSampler;
-
-        void main(void) {        
-            mediump vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-            gl_FragColor = vec4(texelColor.rgb * vLighting, texelColor.a);
-        }
-    </script>
 
     <script id="shader-vs" type="x-shader/x-vertex">
         attribute highp vec3 aVertexNormal;
         attribute highp vec3 aVertexPosition;
         attribute highp vec2 aTextureCoord;
+        
+        attribute highp vec3 aVertexColor;
 
         uniform highp mat4 uNormalMatrix;
-        uniform highp mat4 uMVMatrix;
+
+        
+
+        uniform highp mat4 uMMatrix;
+        uniform highp mat4 uVMatrix;
         uniform highp mat4 uPMatrix;
+        uniform highp vec3 uPulsatingColor;
 
         varying highp vec2 vTextureCoord;
         varying highp vec3 vLighting;
+        varying highp vec3 vColor;
 
         void main(void) {
-            gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+            gl_Position = uPMatrix * uVMatrix * uMMatrix * vec4(aVertexPosition, 1.0);
             vTextureCoord = aTextureCoord;
 
             // Apply lighting effect
@@ -73,8 +68,22 @@
 
             highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
             vLighting = ambientLight + (directionalLightColor * directional);
+            vColor = uPulsatingColor;
         }
-    
+
+    </script>
+
+    <script id="shader-fs" type="x-shader/x-fragment">
+        varying highp vec2 vTextureCoord;
+        varying highp vec3 vLighting;
+        varying highp vec3 vColor;
+
+        uniform sampler2D uSampler;
+
+        void main(void) {
+            mediump vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+            gl_FragColor = vec4(texelColor.rgb * vLighting * vColor, texelColor.a);
+        }
     </script>
 </body>
 </html>

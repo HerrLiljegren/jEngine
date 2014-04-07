@@ -12,6 +12,8 @@
         vertexColorAttribute: null,
         vertexNormalAttribute: null,
 
+        pulsatingColor: null,
+
         cubeVerticesBuffer: null,
         cubeVerticesIndexBuffer: null,
         cubeVerticesColorBuffer: null,
@@ -23,11 +25,14 @@
         cubeImage: null,
 
         perspectiveMatrix: null,
-        mvMatrix: null,
+        mMatrix: null,
+        vMatrix: null,
         mvMatrixStack: [],
 
         cubeRotation: 0.0,
         lastCubeUpdateTime: 0,
+
+        
 
         cubeXOffset: 0.0,
         cubeYOffset: 0.0,
@@ -44,6 +49,8 @@
             this.initializeShaders(runner.front);
             this.initializeBuffers(runner.front);
 
+            this.pulsatingColor = $V([1.0, 0.0, 0.0]);
+
             runner.start();
         },
         update: function(dt) {
@@ -59,6 +66,11 @@
                 this.yIncValue = -this.yIncValue;
                 this.zIncValue = -this.zIncValue;
             }
+
+            this.pulsatingColor.x = (Math.sin(dt*30) + 1) * 0.5;
+            this.pulsatingColor.y = 1;
+            this.pulsatingColor.z = 1;
+
         },
         draw: function(gl) {
             // Establish the perspective with which we want to view the
@@ -69,15 +81,22 @@
 
             // Set the drawing position to the "identity" point, which is
             // the center of the scene.
-            this.loadIdentity();
+            //this.loadIdentity();
 
             // Now move the drawing position a bit to where we want to start
             // drawing the cube.
-            this.mvTranslate([-0.0, 0.0, -6.0]);
+            //this.mvTranslate([-0.0, 0.0, -6.0]);
+
+            this.vMatrix = Matrix.Translation($V([2.0, 0.0, 0.0])).ensure4x4(); //Matrix.I(4);
+
+            this.mMatrix = Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4();
             
+
             // Save the current matrix, then rotate before we draw.
-            this.mvPushMatrix();
-            this.mvRotate(this.cubeRotation, [1, 0, 1]);
+            //this.mvPushMatrix();
+
+            //this.mvRotate(this.cubeRotation, [1, 0, 1]);
+
             //this.mvTranslate([this.cubeXOffset, this.cubeYOffset, this.cubeZOffset]);
 
             // Draw the cube by binding the array buffer to the cube's vertices
@@ -88,14 +107,15 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesNormalBuffer);
             gl.vertexAttribPointer(this.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
 
-            var normalMatrix = this.mvMatrix.inverse();
-            normalMatrix = normalMatrix.transpose();
+            //var normalMatrix = this.mvMatrix.inverse();
+            //normalMatrix = normalMatrix.transpose();
             var nUniform = gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
-            gl.uniformMatrix4fv(nUniform, false, new Float32Array(normalMatrix.flatten()));
+            //gl.uniformMatrix4fv(nUniform, false, new Float32Array(normalMatrix.flatten()));
+            gl.uniformMatrix4fv(nUniform, false, new Float32Array(Matrix.I(4).flatten()));
 
             // Set the colors attribute for the vertices.
-            //gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
-            //gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
+            gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
 
             // Set the texture coordinates attribute for the vertices.
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
@@ -104,13 +124,17 @@
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, this.cubeTexture);
             gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler"), 0);
-
+            
             // Draw the cube.
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
             this.setMatrixUniforms(gl);
             gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
 
-            this.mvPopMatrix();
+            this.mMatrix = Matrix.Translation($V([4.0, 0.0, -6.0])).ensure4x4();
+            this.setMatrixUniforms(gl);
+            gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+
+            //this.mvPopMatrix();
         },
 
         initializeBuffers: function(gl) {
@@ -223,7 +247,7 @@
 
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
 
-            // this.useColors(gl);
+            this.useColors(gl);
 
             this.cubeVerticesTextureCoordBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
@@ -310,6 +334,16 @@
                 }
             }
 
+            generatedColors[0] = 1.0;
+            generatedColors[1] = 0.0;
+            generatedColors[2] = 0.0;
+            generatedColors[3] = 1.0;
+
+            generatedColors[4] = 0.0;
+            generatedColors[5] = 1.0;
+            generatedColors[6] = 0.0;
+            generatedColors[7] = 1.0;
+
             this.cubeVerticesColorBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(generatedColors), gl.STATIC_DRAW);
@@ -351,8 +385,8 @@
             this.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
             gl.enableVertexAttribArray(this.vertexPositionAttribute);
 
-            //this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
-            //gl.enableVertexAttribArray(this.vertexColorAttribute);
+            this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
+            gl.enableVertexAttribArray(this.vertexColorAttribute);
 
             this.textureCoordAttribute = gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
             gl.enableVertexAttribArray(this.textureCoordAttribute);
@@ -407,12 +441,18 @@
             this.multMatrix(Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4());
         },
 
-        setMatrixUniforms: function(gl) {
+        setMatrixUniforms: function (gl) {
             var pUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
             gl.uniformMatrix4fv(pUniform, false, new Float32Array(this.perspectiveMatrix.flatten()));
 
-            var mvUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
-            gl.uniformMatrix4fv(mvUniform, false, new Float32Array(this.mvMatrix.flatten()));
+            var vUniform = gl.getUniformLocation(this.shaderProgram, "uVMatrix");
+            gl.uniformMatrix4fv(vUniform, false, new Float32Array(this.vMatrix.inverse().flatten()));
+
+            var mUniform = gl.getUniformLocation(this.shaderProgram, "uMMatrix");
+            gl.uniformMatrix4fv(mUniform, false, new Float32Array(this.mMatrix.flatten()));
+
+            var uPulsatingColor = gl.getUniformLocation(this.shaderProgram, "uPulsatingColor");
+            gl.uniform3f(uPulsatingColor, this.pulsatingColor.x, this.pulsatingColor.y, this.pulsatingColor.z);
         },
 
         mvPushMatrix: function(m) {
