@@ -18,7 +18,7 @@
         cubeVerticesIndexBuffer: null,
         cubeVerticesColorBuffer: null,
         cubeVerticesNormalBuffer: null,
-        
+
         cubeVerticesTextureCoordBuffer: null,
         textureCoordAttribute: null,
         cubeTexture: null,
@@ -32,7 +32,6 @@
         cubeRotation: 0.0,
         lastCubeUpdateTime: 0,
 
-        
 
         cubeXOffset: 0.0,
         cubeYOffset: 0.0,
@@ -41,6 +40,9 @@
         xIncValue: 0.2,
         yIncValue: -0.4,
         zIncValue: 0.4,
+
+        pulse: 0,
+        switch: 1,
 
         initialize: function(runner, config) {
             this.runner = runner;
@@ -67,10 +69,13 @@
                 this.zIncValue = -this.zIncValue;
             }
 
-            this.pulsatingColor.x = (Math.sin(dt*30) + 1) * 0.5;
-            this.pulsatingColor.y = 1;
-            this.pulsatingColor.z = 1;
+            this.pulse += (dt * this.switch) * 0.5;
+            if (this.pulse > 1) this.switch = -1;
+            if (this.pulse < 0) this.switch = 1;
 
+            this.pulsatingColor.x = this.pulse;
+            this.pulsatingColor.y = 0;
+            this.pulsatingColor.z = 0;
         },
         draw: function(gl) {
             // Establish the perspective with which we want to view the
