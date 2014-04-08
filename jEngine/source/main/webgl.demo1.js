@@ -1,4 +1,4 @@
-﻿define(['game', 'glutils'], function(game) {
+﻿define(['game', 'mesh.cube', 'glutils'], function(game, Cube) {
     var demo = {
         defaults: {
             threedee: true,
@@ -44,20 +44,29 @@
         pulse: 0,
         switch: 1,
 
+        cubes: [],
+
         initialize: function(runner, config) {
             this.runner = runner;
 
-            this.initializeTextures(runner.front);
-            this.initializeShaders(runner.front);
-            this.initializeBuffers(runner.front);
+            //this.initializeTextures(runner.front);
+            //this.initializeShaders(runner.front);
+            //this.initializeBuffers(runner.front);
 
             this.pulsatingColor = $V([1.0, 0.0, 0.0]);
+
+            this.cubes.push(new Cube(runner.front), [-2.0, 1.0, 0.0]);
+            this.cubes.push(new Cube(runner.front), [-2.0, -1.0, 0.0]);
+            this.cubes.push(new Cube(runner.front), [2.0, -1.0, 0.0]);
+            this.cubes.push(new Cube(runner.front), [2.0, 1.0, 0.0]);
+
+            
 
             runner.start();
         },
         update: function(dt) {
 
-            this.cubeRotation += (30 * dt);
+            this.cubeRotation += (dt * 0.5);
 
             this.cubeXOffset += this.xIncValue * 3 * dt;
             this.cubeYOffset += this.yIncValue * 3 * dt;
@@ -69,13 +78,17 @@
                 this.zIncValue = -this.zIncValue;
             }
 
-            this.pulse += (dt * this.switch) * 0.5;
+            this.pulse += (dt * this.switch) * 1;
             if (this.pulse > 1) this.switch = -1;
             if (this.pulse < 0) this.switch = 1;
 
             this.pulsatingColor.x = this.pulse;
-            this.pulsatingColor.y = 0;
+            this.pulsatingColor.y = 0.5;
             this.pulsatingColor.z = 0;
+
+            for (var i = 0; i < this.cubes.length; i++) {
+                this.cubes[i].update(dt);
+            }
         },
         draw: function(gl) {
             // Establish the perspective with which we want to view the
@@ -92,15 +105,18 @@
             // drawing the cube.
             //this.mvTranslate([-0.0, 0.0, -6.0]);
 
-            this.vMatrix = Matrix.Translation($V([2.0, 0.0, 0.0])).ensure4x4(); //Matrix.I(4);
+            this.vMatrix = Matrix.Translation($V([2.0, 0.0, 6.0])).ensure4x4(); //Matrix.I(4);
 
-            this.mMatrix = Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4();
+            var translation = Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4();
+            var rotation = Matrix.Rotation(this.cubeRotation, $V([1, 0, 1])).ensure4x4();
+            this.mMatrix = translation.multiply(rotation);
             
 
             // Save the current matrix, then rotate before we draw.
             //this.mvPushMatrix();
 
             //this.mvRotate(this.cubeRotation, [1, 0, 1]);
+            
 
             //this.mvTranslate([this.cubeXOffset, this.cubeYOffset, this.cubeZOffset]);
 
@@ -135,7 +151,9 @@
             this.setMatrixUniforms(gl);
             gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
 
-            this.mMatrix = Matrix.Translation($V([4.0, 0.0, -6.0])).ensure4x4();
+            translation = Matrix.Translation($V([4.0, 0.0, -6.0])).ensure4x4();
+            rotation = Matrix.Rotation(this.cubeRotation, $V([-1, 0, -1])).ensure4x4();
+            this.mMatrix = translation.multiply(rotation);
             this.setMatrixUniforms(gl);
             gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
 
