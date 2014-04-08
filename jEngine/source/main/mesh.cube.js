@@ -1,5 +1,5 @@
 ﻿define(function() {
-    var Cube = function(gl, startPosition) {
+    var Cube = function(gl, startPosition, rotationVector) {
         this.vertices = [];
         this.verticesIndices = [];
         this.verticesNormals = [];
@@ -9,37 +9,67 @@
         this.verticesIndicesBuffer = null;
         this.verticesNormalsBuffer = null;
         this.textureCoordinatesBuffer = null;
-
-        this.shaderProgram = null;
-        this.vertexPositionAttribute = null;
-        this.textureCoordAttribute = null;
-
+        
         this.texture = null;
         this.image = null;
 
         this.position = $V(startPosition);
+        this.modelMatrix = null;
 
-        _setupMeshData();
-        _setupBuffers(gl);
-        _setupTextures(gl);
-        _setupShaders(gl);
+        this.rotationVector = $V(rotationVector);
+        this.cubeRotation = 0.0,
+        this.lastCubeUpdateTime = 0,
+
+        this.cubeXOffset = 0.0;
+        this.cubeYOffset = 0.0;
+        this.cubeZOffset = 0.0;
+
+        this.xIncValue = 0.2;
+        this.yIncValue = -0.4;
+        this.zIncValue = 0.4;
+        this.pulse = 0;
+        this.switch = 1;
+        this.pulsatingColor = $V([1.0, 0.0, 0.0]),
+
+        this._setupMeshData();
+        this._setupBuffers(gl);
+        this._setupTextures(gl);
     };
     
     Cube.prototype.update = function (dt) {
+        this.cubeRotation += (dt * 0.5);
+
+        this.cubeXOffset += this.xIncValue * 3 * dt;
+        this.cubeYOffset += this.yIncValue * 3 * dt;
+        this.cubeZOffset += this.zIncValue * 3 * dt;
+
+        if (Math.abs(this.cubeYOffset) > 2.5) {
+            this.xIncValue = -this.xIncValue;
+            this.yIncValue = -this.yIncValue;
+            this.zIncValue = -this.zIncValue;
+        }
+
+        this.pulse += (dt * this.switch) * 1;
+        if (this.pulse > 1) this.switch = -1;
+        if (this.pulse < 0) this.switch = 1;
+
+        this.pulsatingColor.x = 0.7;//this.pulse;
+        this.pulsatingColor.y = 1.0;
+        this.pulsatingColor.z = 0.0;
+
+        var translation = Matrix.Translation(this.position).ensure4x4();
+        var rotation = Matrix.Rotation(this.cubeRotation, this.rotationVector).ensure4x4();
+        this.modelMatrix = translation.multiply(rotation);
 
     }
 
     Cube.prototype.render = function (gl) {
-        // Draw the cube by binding the array buffer to the cube's vertices
-        // array, setting attributes, and pushing it to GL.
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.verticesBuffer);
-        gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.verticesNormalsBuffer);
-        gl.vertexAttribPointer(this.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+        
+        
+        gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
     }
 
-    function _setupMeshData() {
+    Cube.prototype._setupMeshData = function() {
         this.vertices = [
             // Front face
             -1.0, -1.0, 1.0,
@@ -159,7 +189,7 @@
         ];
     }
 
-    function _setupBuffers(gl) {
+    Cube.prototype._setupBuffers = function(gl) {
         // Create a buffer for the cube's vertices.
         this.verticesBuffer = gl.createBuffer();
 
@@ -185,7 +215,7 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.textureCoordinates), gl.STATIC_DRAW);
     }
 
-    function _setupTextures(gl) {
+    Cube.prototype._setupTextures = function(gl) {
         var me = this;
         this.texture = gl.createTexture();
         this.image = new Image();
@@ -203,68 +233,7 @@
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
-    function _setupShaders(gl) {
-        var fragmentShader = _getShader(gl, "shader-fs");
-        var vertexShader = _getShader(gl, "shader-vs");
-
-        this.shaderProgram = gl.createProgram();
-        gl.attachShader(this.shaderProgram, vertexShader);
-        gl.attachShader(this.shaderProgram, fragmentShader);
-        gl.linkProgram(this.shaderProgram);
-
-        if (!gl.getProgramParameter(this.shaderProgram, gl.LINK_STATUS)) {
-            alert("Unable to initialize the shader program");
-        }
-
-        gl.useProgram(this.shaderProgram);
-
-        this.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(this.vertexPositionAttribute);
-
-        //this.vertexColorAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexColor");
-        //gl.enableVertexAttribArray(this.vertexColorAttribute);
-
-        this.textureCoordAttribute = gl.getAttribLocation(this.shaderProgram, "aTextureCoord");
-        gl.enableVertexAttribArray(this.textureCoordAttribute);
-    }
-
-    function _getShader(gl, id) {
-        var shaderScript, theSource, currentChild, shader;
-
-        shaderScript = document.getElementById(id);
-
-        if (!shaderScript) return null;
-
-        theSource = "";
-        currentChild = shaderScript.firstChild;
-
-        while (currentChild) {
-            if (currentChild.nodeType == currentChild.TEXT_NODE) {
-                theSource += currentChild.textContent;
-            }
-
-            currentChild = currentChild.nextSibling;
-        }
-
-        if (shaderScript.type === "x-shader/x-fragment") {
-            shader = gl.createShader(gl.FRAGMENT_SHADER);
-        } else if (shaderScript.type === "x-shader/x-vertex") {
-            shader = gl.createShader(gl.VERTEX_SHADER);
-        } else {
-            return null;
-        }
-
-        gl.shaderSource(shader, theSource);
-
-        gl.compileShader(shader);
-
-        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
-            return null;
-        }
-
-        return shader;
-    }
+    
 
     return Cube;
 });

@@ -7,12 +7,10 @@
         runner: null,
 
         shaderProgram: null,
-
         vertexPositionAttribute: null,
+        textureCoordAttribute: null,
         vertexColorAttribute: null,
         vertexNormalAttribute: null,
-
-        pulsatingColor: null,
 
         cubeVerticesBuffer: null,
         cubeVerticesIndexBuffer: null,
@@ -20,71 +18,31 @@
         cubeVerticesNormalBuffer: null,
 
         cubeVerticesTextureCoordBuffer: null,
-        textureCoordAttribute: null,
         cubeTexture: null,
         cubeImage: null,
 
         perspectiveMatrix: null,
-        mMatrix: null,
         vMatrix: null,
         mvMatrixStack: [],
-
-        cubeRotation: 0.0,
-        lastCubeUpdateTime: 0,
-
-
-        cubeXOffset: 0.0,
-        cubeYOffset: 0.0,
-        cubeZOffset: 0.0,
-
-        xIncValue: 0.2,
-        yIncValue: -0.4,
-        zIncValue: 0.4,
-
-        pulse: 0,
-        switch: 1,
+        
+        
 
         cubes: [],
 
         initialize: function(runner, config) {
             this.runner = runner;
 
-            //this.initializeTextures(runner.front);
-            //this.initializeShaders(runner.front);
-            //this.initializeBuffers(runner.front);
+            this.cubes.push(new Cube(runner.front, [-2.0, 2.0, 0.0], [1.0, 0.0, 0.0]));
+            this.cubes.push(new Cube(runner.front, [-2.0, -2.0, 0.0], [-1.0, 0.0, 0.0]));
+            this.cubes.push(new Cube(runner.front, [2.0, -2.0, 0.0], [0.0, -1.0, 0.0]));
+            this.cubes.push(new Cube(runner.front, [2.0, 2.0, 0.0], [0.0, -1.0, 0.0]));
 
-            this.pulsatingColor = $V([1.0, 0.0, 0.0]);
 
-            this.cubes.push(new Cube(runner.front), [-2.0, 1.0, 0.0]);
-            this.cubes.push(new Cube(runner.front), [-2.0, -1.0, 0.0]);
-            this.cubes.push(new Cube(runner.front), [2.0, -1.0, 0.0]);
-            this.cubes.push(new Cube(runner.front), [2.0, 1.0, 0.0]);
-
-            
+            this.setupShaders(runner.front);
 
             runner.start();
         },
         update: function(dt) {
-
-            this.cubeRotation += (dt * 0.5);
-
-            this.cubeXOffset += this.xIncValue * 3 * dt;
-            this.cubeYOffset += this.yIncValue * 3 * dt;
-            this.cubeZOffset += this.zIncValue * 3 * dt;
-
-            if (Math.abs(this.cubeYOffset) > 2.5) {
-                this.xIncValue = -this.xIncValue;
-                this.yIncValue = -this.yIncValue;
-                this.zIncValue = -this.zIncValue;
-            }
-
-            this.pulse += (dt * this.switch) * 1;
-            if (this.pulse > 1) this.switch = -1;
-            if (this.pulse < 0) this.switch = 1;
-
-            this.pulsatingColor.x = this.pulse;
-            this.pulsatingColor.y = 0.5;
-            this.pulsatingColor.z = 0;
 
             for (var i = 0; i < this.cubes.length; i++) {
                 this.cubes[i].update(dt);
@@ -105,27 +63,23 @@
             // drawing the cube.
             //this.mvTranslate([-0.0, 0.0, -6.0]);
 
-            this.vMatrix = Matrix.Translation($V([2.0, 0.0, 6.0])).ensure4x4(); //Matrix.I(4);
-
-            var translation = Matrix.Translation($V([-0.0, 0.0, -6.0])).ensure4x4();
-            var rotation = Matrix.Rotation(this.cubeRotation, $V([1, 0, 1])).ensure4x4();
-            this.mMatrix = translation.multiply(rotation);
-            
+            this.vMatrix = Matrix.Translation($V([0.0, 0.0, 12.0])).ensure4x4(); //Matrix.I(4);
 
             // Save the current matrix, then rotate before we draw.
             //this.mvPushMatrix();
 
             //this.mvRotate(this.cubeRotation, [1, 0, 1]);
-            
 
-            //this.mvTranslate([this.cubeXOffset, this.cubeYOffset, this.cubeZOffset]);
+
+//this.mvTranslate([this.cubeXOffset, this.cubeYOffset, this.cubeZOffset]);
 
             // Draw the cube by binding the array buffer to the cube's vertices
             // array, setting attributes, and pushing it to GL.
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesBuffer);
+            
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubes[0].verticesBuffer);
             gl.vertexAttribPointer(this.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesNormalBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubes[0].verticesNormalsBuffer);
             gl.vertexAttribPointer(this.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
 
             //var normalMatrix = this.mvMatrix.inverse();
@@ -139,198 +93,32 @@
             //gl.vertexAttribPointer(this.vertexColorAttribute, 4, gl.FLOAT, false, 0, 0);
 
             // Set the texture coordinates attribute for the vertices.
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubes[0].textureCoordinatesBuffer);
             gl.vertexAttribPointer(this.textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
 
             gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.cubeTexture);
+            gl.bindTexture(gl.TEXTURE_2D, this.cubes[0].texture);
             gl.uniform1i(gl.getUniformLocation(this.shaderProgram, "uSampler"), 0);
-            
+
             // Draw the cube.
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
-            this.setMatrixUniforms(gl);
-            gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubes[0].verticesIndicesBuffer);
+            
+            var pUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
+            gl.uniformMatrix4fv(pUniform, false, new Float32Array(this.perspectiveMatrix.flatten()));
 
-            translation = Matrix.Translation($V([4.0, 0.0, -6.0])).ensure4x4();
-            rotation = Matrix.Rotation(this.cubeRotation, $V([-1, 0, -1])).ensure4x4();
-            this.mMatrix = translation.multiply(rotation);
-            this.setMatrixUniforms(gl);
-            gl.drawElements(gl.TRIANGLES, 36, gl.UNSIGNED_SHORT, 0);
+            var vUniform = gl.getUniformLocation(this.shaderProgram, "uVMatrix");
+            gl.uniformMatrix4fv(vUniform, false, new Float32Array(this.vMatrix.inverse().flatten()));
 
-            //this.mvPopMatrix();
-        },
 
-        initializeBuffers: function(gl) {
-            // Create a buffer for the cube's vertices.
-            this.cubeVerticesBuffer = gl.createBuffer();
+            for (var i = 0; i < this.cubes.length; i++) {
+                var mUniform = gl.getUniformLocation(this.shaderProgram, "uMMatrix");
+                gl.uniformMatrix4fv(mUniform, false, new Float32Array(this.cubes[i].modelMatrix.flatten()));
 
-            // Select the cubeVerticesBuffer as the one to apply vertex
-            // operations to from here out.
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesBuffer);
+                var uPulsatingColor = gl.getUniformLocation(this.shaderProgram, "uPulsatingColor");
+                gl.uniform3f(uPulsatingColor, this.cubes[i].pulsatingColor.x, this.cubes[i].pulsatingColor.y, this.cubes[i].pulsatingColor.z);
 
-            /*            
-                         _.-+.
-                    _.-""     '.
-               +:""            '.
-               J \               '.
-               L \             _.-+
-               |  '.       _.-"   |
-               J    \  _.-"       L
-               L    +"            J
-               +    |             |
-                \   |           .+
-                 \  |        .-'
-                  \ |     .-'
-                   \|  .-'
-                    +'   hs
-*/
-            var vertices = [
-                // Front face
-                -1.0, -1.0, 1.0,
-                1.0, -1.0, 1.0,
-                1.0, 1.0, 1.0,
-                -1.0, 1.0, 1.0,
-
-                // Back face
-                -1.0, -1.0, -1.0,
-                -1.0, 1.0, -1.0,
-                1.0, 1.0, -1.0,
-                1.0, -1.0, -1.0,
-
-                // Top face
-                -1.0, 1.0, -1.0,
-                -1.0, 1.0, 1.0,
-                1.0, 1.0, 1.0,
-                1.0, 1.0, -1.0,
-
-                // Bottom face
-                -1.0, -1.0, -1.0,
-                1.0, -1.0, -1.0,
-                1.0, -1.0, 1.0,
-                -1.0, -1.0, 1.0,
-
-                // Right face
-                1.0, -1.0, -1.0,
-                1.0, 1.0, -1.0,
-                1.0, 1.0, 1.0,
-                1.0, -1.0, 1.0,
-
-                // Left face
-                -1.0, -1.0, -1.0,
-                -1.0, -1.0, 1.0,
-                -1.0, 1.0, 1.0,
-                -1.0, 1.0, -1.0
-            ];
-
-            // Now pass the list of vertices into WebGL to build the shape. We
-            // do this by creating a Float32Array from the JavaScript array,
-            // then use it to fill the current vertex buffer.
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-            this.cubeVerticesNormalBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesNormalBuffer);
-
-            var vertexNormals = [
-                // Front
-                0.0, 0.0, 1.0,
-                0.0, 0.0, 1.0,
-                0.0, 0.0, 1.0,
-                0.0, 0.0, 1.0,
-
-                // Back
-                0.0, 0.0, -1.0,
-                0.0, 0.0, -1.0,
-                0.0, 0.0, -1.0,
-                0.0, 0.0, -1.0,
-
-                // Top
-                0.0, 1.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 1.0, 0.0,
-
-                // Bottom
-                0.0, -1.0, 0.0,
-                0.0, -1.0, 0.0,
-                0.0, -1.0, 0.0,
-                0.0, -1.0, 0.0,
-
-                // Right
-                1.0, 0.0, 0.0,
-                1.0, 0.0, 0.0,
-                1.0, 0.0, 0.0,
-                1.0, 0.0, 0.0,
-
-                // Left
-                -1.0, 0.0, 0.0,
-                -1.0, 0.0, 0.0,
-                -1.0, 0.0, 0.0,
-                -1.0, 0.0, 0.0
-            ];
-
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
-
-            //this.useColors(gl);
-
-            this.cubeVerticesTextureCoordBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesTextureCoordBuffer);
-
-            var textureCoordinates = [
-                // Front
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0,
-                // Back
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0,
-                // Top
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0,
-                // Bottom
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0,
-                // Right
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0,
-                // Left
-                0.0, 0.0,
-                1.0, 0.0,
-                1.0, 1.0,
-                0.0, 1.0
-            ];
-
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
-
-            // Build the element array buffer; this specifies the indices
-            // into the vertex array for each face's vertices.
-
-            this.cubeVerticesIndexBuffer = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cubeVerticesIndexBuffer);
-
-            // This array defines each face as two triangles, using the
-            // indices into the vertex array to specify each triangle's
-            // position.
-            var cubeVertexIndices = [
-                0, 1, 2, 0, 2, 3, // front
-                4, 5, 6, 4, 6, 7, // back
-                8, 9, 10, 8, 10, 11, // top
-                12, 13, 14, 12, 14, 15, // bottom
-                16, 17, 18, 16, 18, 19, // right
-                20, 21, 22, 20, 22, 23 // left
-            ];
-
-            // Now send the element array to GL
-
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
+                this.cubes[i].render(gl);
+            }
         },
 
         useColors: function(gl) {
@@ -357,32 +145,13 @@
                 }
             }
 
-           
 
             this.cubeVerticesColorBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.cubeVerticesColorBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(generatedColors), gl.STATIC_DRAW);
         },
 
-        initializeTextures: function (gl) {
-            var me = this;
-            this.cubeTexture = gl.createTexture();
-            this.cubeImage = new Image();
-            this.cubeImage.onload = function () { me.onTextureLoaded(gl, me.cubeImage, me.cubeTexture); }
-            //this.cubeImage.src = "assets/textures/Grass_1.png";
-            this.cubeImage.src = "assets/textures/stone_wall_sandstone_4096.jpg";
-        },
-
-        onTextureLoaded: function(gl, image, texture) {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-            gl.generateMipmap(gl.TEXTURE_2D);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        },
-
-        initializeShaders: function(gl) {
+        setupShaders: function(gl) {
             var fragmentShader = this.getShader(gl, "shader-fs");
             var vertexShader = this.getShader(gl, "shader-vs");
 
@@ -443,56 +212,6 @@
             }
 
             return shader;
-        },
-        loadIdentity: function() {
-            this.mvMatrix = Matrix.I(4);
-        },
-
-        multMatrix: function(m) {
-            this.mvMatrix = this.mvMatrix.x(m);
-        },
-
-        mvTranslate: function(v) {
-            this.multMatrix(Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4());
-        },
-
-        setMatrixUniforms: function (gl) {
-            var pUniform = gl.getUniformLocation(this.shaderProgram, "uPMatrix");
-            gl.uniformMatrix4fv(pUniform, false, new Float32Array(this.perspectiveMatrix.flatten()));
-
-            var vUniform = gl.getUniformLocation(this.shaderProgram, "uVMatrix");
-            gl.uniformMatrix4fv(vUniform, false, new Float32Array(this.vMatrix.inverse().flatten()));
-
-            var mUniform = gl.getUniformLocation(this.shaderProgram, "uMMatrix");
-            gl.uniformMatrix4fv(mUniform, false, new Float32Array(this.mMatrix.flatten()));
-
-            var uPulsatingColor = gl.getUniformLocation(this.shaderProgram, "uPulsatingColor");
-            gl.uniform3f(uPulsatingColor, this.pulsatingColor.x, this.pulsatingColor.y, this.pulsatingColor.z);
-        },
-
-        mvPushMatrix: function(m) {
-            if (m) {
-                this.mvMatrixStack.push(m.dup());
-                this.mvMatrix = m.dup();
-            } else {
-                this.mvMatrixStack.push(this.mvMatrix.dup());
-            }
-        },
-
-        mvPopMatrix: function() {
-            if (!this.mvMatrixStack.length) {
-                throw("Can't pop from an empty matrix stack.");
-            }
-
-            this.mvMatrix = this.mvMatrixStack.pop();
-            return this.mvMatrix;
-        },
-
-        mvRotate: function(angle, v) {
-            var inRadians = angle * Math.PI / 180.0;
-
-            var m = Matrix.Rotation(inRadians, $V([v[0], v[1], v[2]])).ensure4x4();
-            this.multMatrix(m);
         }
     }
 
