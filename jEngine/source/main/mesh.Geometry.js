@@ -1,12 +1,12 @@
-﻿define([], function() {
-    var Geometry = {        
-        Cube: {
-            Vertices: [],
-            Indices: [],
-            Normals: [],
-            TextureCoordinates: []
-        }
-    };
+﻿'use strict';
 
-    return Geometry;
-});
+var Geometry = {
+    Cube: {
+        Vertices: [],
+        Indices: [],
+        Normals: [],
+        TextureCoordinates: []
+    }
+};
+
+module.exports = Geometry;

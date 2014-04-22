@@ -1,14 +1,18 @@
-﻿// augment Sylvester some
-Matrix.Translation = function(v) {
+﻿'use strict';
+
+var sylvester = require('../vendor/sylvester.src');
+
+// augment Sylvester some
+sylvester.Matrix.Translation = function (v) {
     if (v.elements.length == 2) {
-        var r = Matrix.I(3);
+        var r = sylvester.Matrix.I(3);
         r.elements[2][0] = v.elements[0];
         r.elements[2][1] = v.elements[1];
         return r;
     }
 
     if (v.elements.length == 3) {
-        var r = Matrix.I(4);
+        var r = sylvester.Matrix.I(4);
         r.elements[0][3] = v.elements[0];
         r.elements[1][3] = v.elements[1];
         r.elements[2][3] = v.elements[2];
@@ -18,7 +22,7 @@ Matrix.Translation = function(v) {
     throw "Invalid length for Translation";
 }
 
-Matrix.prototype.flatten = function() {
+sylvester.Matrix.prototype.flatten = function () {
     var result = [];
     if (this.elements.length == 0)
         return [];
@@ -30,7 +34,7 @@ Matrix.prototype.flatten = function() {
     return result;
 }
 
-Matrix.prototype.ensure4x4 = function() {
+sylvester.Matrix.prototype.ensure4x4 = function () {
     if (this.elements.length == 4 &&
         this.elements[0].length == 4)
         return this;
@@ -62,19 +66,19 @@ Matrix.prototype.ensure4x4 = function() {
     return this;
 };
 
-Matrix.prototype.make3x3 = function() {
+sylvester.Matrix.prototype.make3x3 = function () {
     if (this.elements.length != 4 ||
         this.elements[0].length != 4)
         return null;
 
-    return Matrix.create([
+    return sylvester.Matrix.create([
         [this.elements[0][0], this.elements[0][1], this.elements[0][2]],
         [this.elements[1][0], this.elements[1][1], this.elements[1][2]],
         [this.elements[2][0], this.elements[2][1], this.elements[2][2]]
     ]);
 };
 
-Vector.prototype.flatten = function() {
+sylvester.Vector.prototype.flatten = function () {
     return this.elements;
 };
 
@@ -169,7 +173,7 @@ function makeFrustum(left, right,
     var C = -(zfar + znear) / (zfar - znear);
     var D = -2 * zfar * znear / (zfar - znear);
 
-    return $M([
+    return sylvester.$M([
         [X, 0, A, 0],
         [0, Y, B, 0],
         [0, 0, C, D],
@@ -185,10 +189,18 @@ function makeOrtho(left, right, bottom, top, znear, zfar) {
     var ty = -(top + bottom) / (top - bottom);
     var tz = -(zfar + znear) / (zfar - znear);
 
-    return $M([
+    return sylvester.$M([
         [2 / (right - left), 0, 0, tx],
         [0, 2 / (top - bottom), 0, ty],
         [0, 0, -2 / (zfar - znear), tz],
         [0, 0, 0, 1]
     ]);
 }
+
+module.exports = {
+    mht: mht,
+    makeLookAt: makeLookAt,
+    makeOrtho: makeOrtho,
+    makePerspective: makePerspective,
+    makeFrustum: makeFrustum,
+};

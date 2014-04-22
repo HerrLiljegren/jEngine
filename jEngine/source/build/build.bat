@@ -1,1 +1,0 @@
-node ..\vendor\r.js -o build.json

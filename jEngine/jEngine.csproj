@@ -58,12 +58,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="assets\textures\Grass_1.png" />
-    <Content Include="packages.config" />
+    <Content Include="assets\textures\stone_wall_sandstone_4096.jpg" />
+    <Content Include="source\build\game-bundle.js" />
     <Content Include="source\main\mesh.cube.js" />
     <Content Include="source\main\mesh.Geometry.js" />
     <Content Include="source\main\module.utilities.js" />
-    <Content Include="source\build\build.bat" />
-    <Content Include="source\build\build.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -73,14 +72,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="index.html" />
-    <Content Include="source\build\main-built.js" />
     <Content Include="source\main.js" />
     <Content Include="source\main\module.configuration.js" />
     <Content Include="source\main\module.demo1.js" />
     <Content Include="source\main\webgl.demo1.js" />
     <Content Include="source\vendor\glutils.js" />
-    <Content Include="source\vendor\r.js" />
-    <Content Include="source\vendor\require.js" />
     <Content Include="source\main\game.js" />
     <Content Include="source\vendor\sylvester.src.js" />
     <Content Include="Web.config" />

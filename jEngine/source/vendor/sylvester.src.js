@@ -1247,8 +1247,15 @@ Plane.YZ = Plane.create(Vector.Zero(3), Vector.i);
 Plane.ZX = Plane.create(Vector.Zero(3), Vector.j);
 Plane.YX = Plane.XY; Plane.ZY = Plane.YZ; Plane.XZ = Plane.ZX;
 
-// Utility functions
-var $V = Vector.create;
-var $M = Matrix.create;
-var $L = Line.create;
-var $P = Plane.create;
+
+module.exports = {
+    Vector: Vector,
+    Matrix: Matrix,
+    Line: Line,
+    Plane: Plane,
+    // Utility functions
+    $V: Vector.create,
+    $M: Matrix.create,
+    $L: Line.create,
+    $P: Plane.create
+};

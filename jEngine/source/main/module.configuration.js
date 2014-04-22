@@ -1,7 +1,5 @@
-﻿define(function() {
+﻿'use strict';
 
-    return {
-        version: "0.1"
-    };
-
-});
+module.exports = {
+    version: "0.1"
+};
