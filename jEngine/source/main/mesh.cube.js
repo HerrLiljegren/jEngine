@@ -53,9 +53,10 @@
         if (this.pulse > 1) this.switch = -1;
         if (this.pulse < 0) this.switch = 1;
 
-        this.pulsatingColor.x = 0.7;//this.pulse;
-        this.pulsatingColor.y = 1.0;
-        this.pulsatingColor.z = 0.0;
+        console.log(this.pulse);
+        this.pulsatingColor.x = this.pulse;
+        this.pulsatingColor.y = 1;
+        this.pulsatingColor.z = this.pulse;
 
         var translation = Matrix.Translation(this.position).ensure4x4();
         var rotation = Matrix.Rotation(this.cubeRotation, this.rotationVector).ensure4x4();
@@ -220,8 +221,8 @@
         this.texture = gl.createTexture();
         this.image = new Image();
         this.image.onload = function () { onTextureLoaded(gl, me.image, me.texture); }
-        //this.cubeImage.src = "assets/textures/Grass_1.png";
-        this.image.src = "assets/textures/stone_wall_sandstone_4096.jpg";
+        this.image.src = "assets/textures/Grass_1.png";
+        //this.image.src = "assets/textures/stone_wall_sandstone_4096.jpg";
     }
 
     function onTextureLoaded(gl, image, texture) {

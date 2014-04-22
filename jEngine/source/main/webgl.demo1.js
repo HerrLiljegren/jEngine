@@ -32,10 +32,12 @@
         initialize: function(runner, config) {
             this.runner = runner;
 
-            this.cubes.push(new Cube(runner.front, [-2.0, 2.0, 0.0], [1.0, 0.0, 0.0]));
+            this.cubes.push(new Cube(runner.front, [-2.0, 2.0, 0.0], [1.0, 1.0, 0.0]));
             this.cubes.push(new Cube(runner.front, [-2.0, -2.0, 0.0], [-1.0, 0.0, 0.0]));
             this.cubes.push(new Cube(runner.front, [2.0, -2.0, 0.0], [0.0, -1.0, 0.0]));
             this.cubes.push(new Cube(runner.front, [2.0, 2.0, 0.0], [0.0, -1.0, 0.0]));
+
+            this.cubes.push(new Cube(runner.front, [0.0, 0.0, 0.0], [1.0, 1.0, 1.0]));
 
 
             this.setupShaders(runner.front);
